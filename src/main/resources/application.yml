@@ -19,6 +19,6 @@ spring:
 
 
 jwt:
-  secret: verySecretKey12345
+  secret: verySecretKey12345iusnuneuwcneue7382e23872ubduscesd632873hiuewhiuhciuwheiufh2ihfi3h2h3hhei8wh83h8ohd3o8h2
   expirationMs: 900000           # 15 minutes
   refreshExpirationMs: 604800000

@@ -7,8 +7,9 @@ import com.hdfclife.secureauthservice.dto.RefreshRequest;
 import com.hdfclife.secureauthservice.entity.Member;
 import com.hdfclife.secureauthservice.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -16,31 +17,32 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService{
+public class AuthService {
 
     private final MemberRepository memberRepository;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     private final Set<String> validRefreshTokens = ConcurrentHashMap.newKeySet();
 
     public LoginResponse login(LoginRequest request) {
-        Member member = memberRepository.findByUserId(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Invalid userId or password"));
+        // Authenticate using Spring Security
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUserId(),
+                        request.getPassword()
+                )
+        );
 
-        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
-            throw new RuntimeException("Invalid userId or password");
-        }
+        Member member = memberRepository.findByUserId(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         String accessToken = jwtService.generateAccessToken(member.getUserId());
         String refreshToken = jwtService.generateRefreshToken(member.getUserId());
 
         validRefreshTokens.add(refreshToken);
 
-        LoginResponse response = new LoginResponse();
-        response.setAccessToken(accessToken);
-        response.setRefreshToken(refreshToken);
-        return response;
+        return new LoginResponse(accessToken, refreshToken, "Bearer");
     }
 
     public LoginResponse refreshToken(RefreshRequest request) {
@@ -57,14 +59,10 @@ public class AuthService{
         validRefreshTokens.remove(refreshToken);
         validRefreshTokens.add(newRefreshToken);
 
-        LoginResponse response = new LoginResponse();
-        response.setAccessToken(newAccessToken);
-        response.setRefreshToken(newRefreshToken);
-        return response;
+        return new LoginResponse(newAccessToken, newRefreshToken, "Bearer");
     }
 
     public void logout(LogoutRequest request) {
         validRefreshTokens.remove(request.getRefreshToken());
     }
-
 }

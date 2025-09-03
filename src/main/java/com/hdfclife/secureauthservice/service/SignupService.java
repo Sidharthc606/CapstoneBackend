@@ -5,6 +5,7 @@ import com.hdfclife.secureauthservice.dto.SignupResponse;
 import com.hdfclife.secureauthservice.entity.Member;
 import com.hdfclife.secureauthservice.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ public class SignupService {
 
     private final MemberRepository memberRepository;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private final PasswordEncoder passwordEncoder;
     private final Random random = new Random();
 
     public SignupResponse registerUser(SignupRequest request) {
@@ -37,7 +39,7 @@ public class SignupService {
             user.setLastName(request.getLastName());
             user.setEmail(request.getEmail());
             user.setUserId(request.getUserId());
-            user.setPassword(request.getPassword());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setDob(LocalDate.parse(request.getDob(), formatter));
 
             memberRepository.save(user);

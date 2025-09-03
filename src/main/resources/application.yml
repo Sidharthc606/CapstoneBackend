@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: SecureAuthService
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: welcome.7
+    target-db: authdb
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+
+jwt:
+  secret: verySecretKey12345
+  expirationMs: 900000           # 15 minutes
+  refreshExpirationMs: 604800000
